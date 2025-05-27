@@ -32,28 +32,37 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
+// app.js
 async function findMatch(mode) {
-    // Procura por partidas disponíveis
-    const matchRef = db.collection('matches')
-        .where('mode', '==', mode)
-        .where('status', '==', 'waiting')
-        .limit(1);
-
-    const snapshot = await matchRef.get();
+    console.log("Procurando partida...", mode);
     
-    if (!snapshot.empty) {
-        // Entra em partida existente
-        const match = snapshot.docs[0].data();
-        joinMatch(match.id);
-    } else {
-        // Cria nova partida
-        const newMatch = await db.collection('matches').add({
-            mode: mode,
-            players: [currentUser.uid],
-            status: 'waiting',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        listenForMatchUpdates(newMatch.id);
+    try {
+        const matchRef = db.collection('matches')
+            .where('mode', '==', mode)
+            .where('status', '==', 'waiting')
+            .limit(1);
+
+        const snapshot = await matchRef.get();
+        console.log("Snapshot encontrado:", snapshot.empty);
+        
+        if (!snapshot.empty) {
+            const match = snapshot.docs[0].data();
+            console.log("Entrando na partida existente:", match.id);
+            await joinMatch(match.id);
+        } else {
+            console.log("Criando nova partida...");
+            const newMatchRef = await db.collection('matches').add({
+                mode: mode,
+                players: [currentUser.uid],
+                status: 'waiting',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                state: { board: [], turn: 0 } // Adicione isso
+            });
+            console.log("Partida criada! ID:", newMatchRef.id);
+            listenForMatchUpdates(newMatchRef.id);
+        }
+    } catch (error) {
+        console.error("Erro no matchmaking:", error);
     }
 }
 
@@ -140,6 +149,18 @@ function checkLevelUp(playerRef) {
 }
 let currentMatch = null; // Armazena dados da partida atual
 
+// app.js
+async function joinMatch(matchId) {
+    try {
+        await db.collection('matches').doc(matchId).update({
+            players: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+            status: 'playing' // Muda status para iniciar o jogo
+        });
+        startGame(matchId);
+    } catch (error) {
+        console.error("Erro ao entrar na partida:", error);
+    }
+}
 // Função para iniciar o jogo
 function startGame(matchId) {
     db.collection('matches').doc(matchId).onSnapshot(doc => {
@@ -150,10 +171,10 @@ function startGame(matchId) {
 
 // Renderiza o tabuleiro e informações do jogo
 function renderGame(match) {
-    // Mostra a tela de jogo
+    // Garanta que as telas estão alternando corretamente
+    document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('lobby').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-
     // Cria o tabuleiro baseado no modo
     const board = document.getElementById('gameBoard');
     board.innerHTML = '';
@@ -253,4 +274,46 @@ async function endGame(winnerId) {
 async function getPlayerName(playerId) {
     const doc = await db.collection('players').doc(playerId).get();
     return doc.data().name;
+}
+
+
+// Debug: Verifique se o Firebase está conectado
+console.log("Firebase inicializado?", firebase.apps.length > 0);
+
+// Debug: Monitora autenticação
+auth.onAuthStateChanged((user) => {
+    console.log("Status de autenticação:", user ? "Logado" : "Deslogado");
+    if (user) console.log("UID do usuário:", user.uid);
+});
+
+// Debug: Verifique erros no login
+async function login(playerName) {
+    try {
+        console.log("Tentando login com nome:", playerName);
+        const { user } = await auth.signInAnonymously();
+        console.log("Usuário anônimo criado:", user.uid);
+        
+        await db.collection('players').doc(user.uid).set({
+            name: playerName,
+            elo: 1000,
+            xp: 0,
+            level: 1,
+            lastOnline: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log("Perfil do jogador criado");
+        
+        currentUser = user;
+        showLobby();
+    } catch (error) {
+        console.error("Erro crítico no login:", error);
+        alert("Erro ao conectar: " + error.message);
+    }
+}
+
+// Função para mostrar/ocultar telas
+function showLobby() {
+    console.log("Mostrando lobby...");
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('lobby').classList.remove('hidden');
+    loadLeaderboard();
 }
