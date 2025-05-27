@@ -1,33 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <title>Jogo da Velha Competitivo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Champions</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Ícones do Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Tela de Login -->
-<div id="loginScreen" class="screen">
-    <input type="text" id="playerName" placeholder="Seu nome de jogador">
-    <button onclick="login(document.getElementById('playerName').value)">Jogar!</button>
-</div>
+    <div class="container">
+        <!-- Tela de Login -->
+        <div id="loginScreen" class="screen">
+            <div class="card">
+                <h1>🕹️ Tic Tac Champions</h1>
+                <div class="input-group">
+                    <input type="text" id="playerName" placeholder="Seu nome heróico" maxlength="15">
+                    <button class="btn-primary" onclick="login(document.getElementById('playerName').value)">
+                        <i class="fas fa-play"></i> Começar!
+                    </button>
+                </div>
+                <div class="loading hidden" id="loginLoading"></div>
+            </div>
+        </div>
 
-<!-- Lobby Principal -->
-<div id="lobby" class="screen hidden">
-    <button onclick="findMatch('1x1')">1x1 Clássico</button>
-    <button onclick="findMatch('2x2')">2x2 Duplas</button>
-    <button onclick="findMatch('3x3')">3x3 Times</button>
-    <div id="leaderboard"></div>
-</div>
+        <!-- Lobby Principal -->
+        <div id="lobby" class="screen hidden">
+            <div class="card">
+                <h2>👋 Bem-vindo, <span id="playerGreeting"></span>!</h2>
+                
+                <div class="match-types">
+                    <button class="mode-btn" onclick="findMatch('1x1')">
+                        <i class="fas fa-user-vs-user"></i> 1x1 Clássico
+                    </button>
+                    <button class="mode-btn" onclick="findMatch('2x2')">
+                        <i class="fas fa-users"></i> 2x2 Duplas
+                    </button>
+                    <button class="mode-btn" onclick="findMatch('3x3')">
+                        <i class="fas fa-people-group"></i> 3x3 Times
+                    </button>
+                </div>
 
-<!-- Tabuleiro do Jogo -->
-<div id="gameScreen" class="screen hidden">
-    <div class="game-board" id="gameBoard"></div>
-    <div id="gameInfo"></div>
-</div>
-    <!-- Conteúdo será adicionado aqui -->
-    
-    <!-- Firebase e configuração -->
-<!-- No final do <body> do index.html -->
+                <div class="invite-section">
+                    <button class="btn-secondary" onclick="showInviteFriends()">
+                        <i class="fas fa-user-plus"></i> Convidar Amigos
+                    </button>
+                </div>
+
+                <div class="leaderboard-card">
+                    <h3><i class="fas fa-trophy"></i> Leaderboard</h3>
+                    <div id="leaderboard"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabuleiro do Jogo -->
+        <div id="gameScreen" class="screen hidden">
+            <div class="game-header">
+                <button class="btn-back" onclick="leaveGame()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <div class="game-status" id="gameStatus"></div>
+            </div>
+            
+            <div class="game-container">
+                <div class="game-board" id="gameBoard"></div>
+                <div class="game-info" id="gameInfo">
+                    <div id="playersList"></div>
+                    <div id="matchTimer">00:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
