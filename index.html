@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jogo da Velha Competitivo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Tela de Login -->
+<div id="loginScreen" class="screen">
+    <input type="text" id="playerName" placeholder="Seu nome de jogador">
+    <button onclick="login(document.getElementById('playerName').value)">Jogar!</button>
+</div>
+
+<!-- Lobby Principal -->
+<div id="lobby" class="screen hidden">
+    <button onclick="findMatch('1x1')">1x1 Clássico</button>
+    <button onclick="findMatch('2x2')">2x2 Duplas</button>
+    <button onclick="findMatch('3x3')">3x3 Times</button>
+    <div id="leaderboard"></div>
+</div>
+
+<!-- Tabuleiro do Jogo -->
+<div id="gameScreen" class="screen hidden">
+    <div class="game-board" id="gameBoard"></div>
+    <div id="gameInfo"></div>
+</div>
+    <!-- Conteúdo será adicionado aqui -->
+    
+    <!-- Firebase e configuração -->
+<!-- No final do <body> do index.html -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
